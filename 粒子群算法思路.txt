@@ -1,0 +1,127 @@
+这段代码实现了使用粒子群优化（PSO）来估计信号频率的功能。下面我来详细讲解代码的整体思路和各个步骤：
+
+### 代码概要
+整个代码可以分为以下几个部分：
+1. **数据加载和过滤**：读取Excel数据文件，并根据给定条件进行数据筛选。
+2. **定义误差函数**：创建误差函数，用于衡量估计的信号和实际信号之间的差距。
+3. **粒子群优化算法（PSO）**：使用PSO寻找最优频率，以最小化误差函数。
+4. **运行PSO并输出结果**：设置PSO的参数，运行优化过程，并最终输出最优频率和误差。
+
+### 详细步骤
+
+#### 1. 数据加载和过滤
+```python
+# 步骤1：加载并过滤数据
+file_path = r'C:\Users\周岩珏\Desktop\pythonProject1\第二题.xlsx'
+data = pd.read_excel(file_path)
+
+filtered_data = data[
+    (data['Received Signal Time'] >= 0) &
+    (data['Received Signal Time'] <= 0.0005) &
+    (data['Received Signal Value'] >= -7.28567691506326) &
+    (data['Received Signal Value'] <= 7.50775518925756)
+]
+
+time_filtered = filtered_data['Received Signal Time'].values
+received_signal_filtered = filtered_data['Received Signal Value'].values
+```
+- **目的**：从Excel文件中读取数据，并根据给定的时间和信号值条件对数据进行筛选。
+- **输出**：
+  - `time_filtered` 和 `received_signal_filtered` 分别是筛选后的时间和信号值数组，用于后续频率估计的输入。
+
+#### 2. 定义误差函数
+```python
+def error_function(f, t, r, A=2, phi=0):
+    s = A * np.sin(2 * np.pi * f * t + phi)  # 信号模型
+    error = np.mean((r - s)**2)  # 均方误差（归一化）
+    return error
+```
+- **误差函数的作用**：用于评估给定频率 `f` 生成的正弦信号与实际接收信号 `r` 之间的差异。
+- **误差计算方式**：
+  - 用正弦信号模型 \( s(t) = A \sin(2\pi f t + \phi) \) 来生成与实际信号相似的信号。
+  - 计算两者之间的均方误差（MSE）来作为误差度量。误差越小，说明估计的频率越接近实际信号的频率。
+
+#### 3. 粒子群优化（PSO）算法
+```python
+def particle_swarm_optimization(num_particles, bounds, max_iter, r, t, A=2, phi=0):
+    # 初始化粒子的位置和速度
+    positions = [random.uniform(bounds[0], bounds[1]) for _ in range(num_particles)]
+    velocities = [random.uniform(-1, 1) for _ in range(num_particles)]
+    pbest_positions = positions[:]
+    pbest_values = [error_function(f, t, r, A, phi) for f in positions]
+
+    gbest_position = pbest_positions[0]
+    gbest_value = pbest_values[0]
+
+    for iter in range(max_iter):
+        inertia_weight = 0.9 - iter * (0.9 - 0.4) / max_iter  # 动态调整惯性权重，从0.9逐渐减小到0.4
+
+        # 动态调整认知和社会组件的权重
+        cognitive_coefficient = 1.5
+        social_coefficient = 2.0
+
+        for i in range(num_particles):
+            # 计算当前粒子的误差值
+            current_value = error_function(positions[i], t, r, A, phi)
+
+            # 更新个体最优解
+            if current_value < pbest_values[i]:
+                pbest_positions[i] = positions[i]
+                pbest_values[i] = current_value
+
+            # 更新全局最优解
+            if current_value < gbest_value:
+                gbest_position = positions[i]
+                gbest_value = current_value
+
+        # 更新每个粒子的速度和位置
+        for i in range(num_particles):
+            velocity = (inertia_weight * velocities[i] +
+                        cognitive_coefficient * random.random() * (pbest_positions[i] - positions[i]) +
+                        social_coefficient * random.random() * (gbest_position - positions[i]))
+            velocities[i] = velocity
+
+            # 更新位置
+            positions[i] += velocities[i]
+            positions[i] = np.clip(positions[i], bounds[0], bounds[1])
+
+        # 打印当前的全局最优解
+        print(f"第 {iter + 1} 次迭代: 全局最优频率 = {gbest_position}, 误差 = {gbest_value}")
+
+    return gbest_position, gbest_value
+```
+- **粒子群优化的步骤**：
+  - **初始化粒子的位置和速度**：每个粒子代表一个频率估计值，初始位置（频率）在设定的范围内随机生成，速度也是随机的。
+  - **个体最优和全局最优**：每个粒子都有一个个体最优解（`pbest`），全局最优解（`gbest`）是在所有粒子中表现最好的位置。
+  - **迭代更新**：
+    - **惯性权重**：`inertia_weight` 逐渐减小，以在初期增强探索性，后期增强收敛性。
+    - **认知和社会组件**：`cognitive_coefficient` 控制粒子向个体最优位置靠近，`social_coefficient` 控制粒子向全局最优位置靠近。
+    - **更新速度和位置**：基于惯性、认知和社会三部分更新粒子的速度和位置。
+  - **输出**：每次迭代后输出当前的全局最优频率和误差值。
+
+#### 4. 运行PSO并输出结果
+```python
+# 设置PSO参数
+num_particles = 200  # 粒子数量
+bounds = (1e7, 5e7)  # 频率搜索范围
+max_iter = 500       # 最大迭代次数
+
+# 使用原始接收信号运行PSO
+best_frequency_no_filter, best_error_no_filter = particle_swarm_optimization(num_particles, bounds, max_iter, received_signal_filtered, time_filtered)
+
+# 输出最佳频率和误差
+print(f"最佳频率: {best_frequency_no_filter}, 误差: {best_error_no_filter}")
+```
+- **参数设置**：
+  - 粒子数量设为 200，这有助于更好地覆盖搜索空间。
+  - 频率搜索范围设为 \(10^7\) 到 \(5 \times 10^7\) Hz，这样可以确保搜索集中于可能的解。
+  - 最大迭代次数设为 500，以便给粒子群足够的时间来找到最优解。
+- **结果输出**：最终输出最佳频率和对应的误差值。
+
+### 总结
+1. **数据处理**：从Excel中加载信号数据，并进行过滤，得到符合要求的数据。
+2. **误差函数**：定义了用于衡量频率估计效果的均方误差函数。
+3. **PSO 算法**：使用粒子群优化搜索最优频率，以最小化误差函数。算法通过模拟粒子群体的行为，逐步逼近最佳解。
+4. **结果输出**：最终找到一个使信号误差最小的频率，并输出结果。
+
+这样设计的粒子群优化算法结合误差函数，可以找到一个尽量准确的频率，来匹配信号模型与接收信号之间的差异。如果有更多改进需求，比如进一步减少噪声影响或者提高收敛速度，您可以考虑更复杂的优化策略。
