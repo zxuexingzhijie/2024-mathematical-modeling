@@ -6,7 +6,7 @@ from scipy.interpolate import interp1d
 
 # 步骤1：加载并过滤数据
 # 加载飞行阶段4的Excel文件
-file_path = r'C:\Users\周岩珏\Desktop\pythonProject1\第四题.xlsx'
+file_path = r'C:\Users\***\Desktop\pythonProject1\第四题.xlsx'
 data = pd.read_excel(file_path)
 
 # 提取时间和信号值

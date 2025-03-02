@@ -5,7 +5,7 @@ from scipy.fft import fft, fftfreq
 from scipy.signal import correlate
 
 # 1. 读取 Excel 文件中的数据
-file_path = r'C:\Users\周岩珏\Desktop\pythonProject1\第一问.xlsx'
+file_path = r'C:\Users\***\Desktop\pythonProject1\第一问.xlsx'
 
 # 假设数据存储在第一个工作表中，第一列是时间，第二列是接收到的信号值
 data = pd.read_excel(file_path, sheet_name=0)

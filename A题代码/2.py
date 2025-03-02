@@ -5,7 +5,7 @@ from scipy.signal import butter, lfilter
 
 # 步骤1：加载并过滤数据
 # 加载Excel文件
-file_path = r'C:\Users\周岩珏\Desktop\pythonProject1\第二题.xlsx'
+file_path = r'C:\Users\***\Desktop\pythonProject1\第二题.xlsx'
 data = pd.read_excel(file_path)
 
 # 根据给定条件过滤数据
@@ -20,7 +20,7 @@ filtered_data = data[
 time_filtered = filtered_data['Received Signal Time'].values
 received_signal_filtered = filtered_data['Received Signal Value'].values
 
-# 步骤2：应用带通滤波器去除噪声
+# 应用带通滤波器去除噪声
 # 设计带通滤波器以去除信号中超出特定频段的噪声
 # 滤波器设计函数 - Butterworth带通滤波器
 # 参数：低截止频率，高截止频率，采样频率，滤波器阶数
@@ -46,7 +46,7 @@ highcut = 5e7  # 高截止频率为50 MHz
 # 对接收信号应用带通滤波器，去除不在频段内的频率成分
 filtered_signal = bandpass_filter(received_signal_filtered, lowcut, highcut, sampling_frequency)
 
-# 步骤3：定义误差函数
+# 定义误差函数
 # 计算估计信号与实际接收信号之间的误差
 # 参数：频率，时间，接收信号，振幅，初相位
 def error_function(f, t, r, A=2, phi=0):
@@ -54,7 +54,7 @@ def error_function(f, t, r, A=2, phi=0):
     error = np.mean((r - s) ** 2)  # 计算信号与实际接收信号的均方误差
     return error
 
-# 步骤4：粒子群优化（PSO）算法
+# 粒子群优化（PSO）算法
 # 使用PSO寻找最优频率以最小化误差函数
 # 参数：粒子数量，频率搜索范围，最大迭代次数，接收信号，时间序列，振幅，初相位
 def particle_swarm_optimization(num_particles, bounds, max_iter, r, t, A=2, phi=0):
@@ -106,7 +106,7 @@ def particle_swarm_optimization(num_particles, bounds, max_iter, r, t, A=2, phi=
 
     return gbest_position, gbest_value
 
-# 步骤5：运行粒子群优化
+#  运行粒子群优化
 # 设置PSO参数
 num_particles = 200  # 增加粒子数量以提高搜索覆盖度
 bounds = (1e7, 5e7)  # 缩小频率搜索范围以提高搜索效率

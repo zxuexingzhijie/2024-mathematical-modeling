@@ -4,16 +4,16 @@ import random
 from scipy.fftpack import fft
 from scipy.signal import butter, lfilter
 
-# 步骤1：加载并过滤数据
+# 加载并过滤数据
 # 加载飞行阶段3的Excel文件
-file_path = r'C:\Users\周岩珏\Desktop\pythonProject1\第三题.xlsx'
+file_path = r'C:\Users\***\Desktop\pythonProject1\第三题.xlsx'
 data = pd.read_excel(file_path)
 
 # 提取时间和信号值
 time_filtered = data['Received Signal Time'].values
 received_signal_filtered = data['Received Signal Value'].values
 
-# 步骤2：使用FFT进行频谱分析
+# 使用FFT进行频谱分析
 # 使用快速傅里叶变换（FFT）获取频率谱
 n = len(received_signal_filtered)
 sampling_interval = time_filtered[1] - time_filtered[0]  # 假设时间值均匀分布
@@ -30,7 +30,7 @@ peak_frequency = positive_freqs[np.argmax(positive_magnitude)]
 print(f"FFT初步频率估计：{peak_frequency} Hz")
 
 
-# 步骤3：粒子群优化（PSO）算法
+# 粒子群优化（PSO）算法
 # 定义误差函数（适应度函数）
 def error_function(f, t, r, A=1, phi=0):
     # A和phi未知，因此生成信号时进行归一化处理
@@ -88,7 +88,7 @@ def particle_swarm_optimization(num_particles, bounds, max_iter, r, t):
     return gbest_position, gbest_value
 
 
-# 步骤4：运行PSO
+# 运行PSO
 # 根据FFT分析结果设置PSO参数
 num_particles = 200  # 粒子数量
 bounds = (peak_frequency * 0.8, peak_frequency * 1.2)  # 在FFT估计频率附近进行搜索
